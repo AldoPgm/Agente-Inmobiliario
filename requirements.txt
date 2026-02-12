@@ -1,0 +1,30 @@
+# Core
+fastapi>=0.115.0
+uvicorn[standard]>=0.34.0
+python-dotenv>=1.0.1
+pydantic>=2.10.0
+python-multipart>=0.0.17
+
+# AI / LLM
+openai>=1.59.0
+google-generativeai>=0.8.0
+anthropic>=0.42.0
+
+# WhatsApp (Twilio)
+twilio>=9.4.0
+
+# Email (SendGrid)
+sendgrid>=6.11.0
+
+# Database (Supabase)
+supabase>=2.11.0
+
+# Scheduling
+apscheduler>=3.10.0
+
+# HTTP
+httpx>=0.28.0
+
+# Utilities
+python-dateutil>=2.9.0
+
