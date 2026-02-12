@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Demo - Agente IA Inmobiliario</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a0f;
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* ─── Layout ─── */
+        .demo-container {
+            display: flex;
+            height: 100vh;
+            gap: 0;
+        }
+
+        /* ─── Left Panel: Info ─── */
+        .info-panel {
+            width: 45%;
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background: linear-gradient(135deg, #0a0a1a 0%, #111128 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .info-panel::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 30% 50%, rgba(99, 102, 241, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            color: #818cf8;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 24px;
+            width: fit-content;
+        }
+
+        .info-panel h1 {
+            font-size: 42px;
+            font-weight: 800;
+            line-height: 1.15;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #fff 0%, #c7c7ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .info-panel p {
+            font-size: 17px;
+            color: #8888aa;
+            line-height: 1.6;
+            margin-bottom: 40px;
+        }
+
+        /* ─── Stats Bar ─── */
+        .stats-bar {
+            display: flex;
+            gap: 32px;
+            margin-bottom: 40px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 800;
+            color: #818cf8;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+
+        /* ─── Score Tracker ─── */
+        .score-tracker {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 30px;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.5s ease;
+        }
+
+        .score-tracker.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .score-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .score-header span {
+            font-size: 13px;
+            color: #888;
+            font-weight: 500;
+        }
+
+        .score-value {
+            font-size: 20px;
+            font-weight: 800;
+            color: #818cf8;
+            transition: all 0.5s ease;
+        }
+
+        .score-bar-bg {
+            height: 8px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .score-bar-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #6366f1, #a78bfa);
+            border-radius: 10px;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .score-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .score-item {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.04);
+            color: #555;
+            transition: all 0.4s ease;
+            border: 1px solid transparent;
+        }
+
+        .score-item.active {
+            background: rgba(99, 102, 241, 0.15);
+            color: #a78bfa;
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        /* ─── CTA ─── */
+        .cta-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: #fff;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(99, 102, 241, 0.3);
+        }
+
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 30px rgba(99, 102, 241, 0.5);
+        }
+
+        /* ─── Right Panel: Phone ─── */
+        .phone-panel {
+            width: 55%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #0d0d1a 0%, #0a0a15 100%);
+            position: relative;
+        }
+
+        .phone-panel::before {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, transparent 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+        }
+
+        /* ─── Phone Frame ─── */
+        .phone {
+            width: 380px;
+            height: 780px;
+            background: #1a1a2e;
+            border-radius: 40px;
+            border: 3px solid #2a2a44;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05);
+            position: relative;
+        }
+
+        .phone-notch {
+            width: 140px;
+            height: 30px;
+            background: #0a0a15;
+            border-radius: 0 0 20px 20px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 10;
+        }
+
+        /* ─── WhatsApp Header ─── */
+        .wa-header {
+            background: #1f2c34;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .wa-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6366f1, #a78bfa);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+
+        .wa-contact {
+            flex: 1;
+        }
+
+        .wa-contact-name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #e9edef;
+        }
+
+        .wa-contact-status {
+            font-size: 12px;
+            color: #8696a0;
+        }
+
+        .wa-contact-status.typing {
+            color: #25d366;
+        }
+
+        /* ─── Chat Area ─── */
+        .wa-chat {
+            flex: 1;
+            background: #0b141a;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.02'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            padding: 16px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        /* ─── Messages ─── */
+        .msg {
+            max-width: 85%;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.45;
+            opacity: 0;
+            transform: translateY(10px) scale(0.95);
+            animation: msgIn 0.35s ease forwards;
+            position: relative;
+            word-wrap: break-word;
+        }
+
+        .msg-time {
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.35);
+            text-align: right;
+            margin-top: 3px;
+        }
+
+        .msg.user {
+            align-self: flex-end;
+            background: #005c4b;
+            color: #e9edef;
+            border-radius: 8px 0 8px 8px;
+        }
+
+        .msg.agent {
+            align-self: flex-start;
+            background: #202c33;
+            color: #e9edef;
+            border-radius: 0 8px 8px 8px;
+        }
+
+        .msg.property-card {
+            background: #202c33;
+            padding: 0;
+            overflow: hidden;
+            border-radius: 8px;
+        }
+
+        .prop-image {
+            width: 100%;
+            height: 120px;
+            background: linear-gradient(135deg, #1a1a3e, #2a2a5e);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            position: relative;
+        }
+
+        .prop-badge {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: rgba(99, 102, 241, 0.9);
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+        }
+
+        .prop-info {
+            padding: 12px;
+        }
+
+        .prop-title {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            color: #e9edef;
+        }
+
+        .prop-price {
+            font-size: 18px;
+            font-weight: 800;
+            color: #25d366;
+            margin-bottom: 6px;
+        }
+
+        .prop-details {
+            font-size: 12px;
+            color: #8696a0;
+        }
+
+        /* ─── Typing Indicator ─── */
+        .typing-indicator {
+            display: none;
+            align-self: flex-start;
+            background: #202c33;
+            padding: 12px 18px;
+            border-radius: 8px;
+            gap: 4px;
+        }
+
+        .typing-indicator.visible {
+            display: flex;
+        }
+
+        .typing-dot {
+            width: 7px;
+            height: 7px;
+            background: #8696a0;
+            border-radius: 50%;
+            animation: typingBounce 1.4s infinite ease-in-out;
+        }
+
+        .typing-dot:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-dot:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        /* ─── Input Bar ─── */
+        .wa-input {
+            background: #1f2c34;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .wa-input-field {
+            flex: 1;
+            background: #2a3942;
+            border: none;
+            border-radius: 20px;
+            padding: 10px 16px;
+            color: #e9edef;
+            font-size: 14px;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .wa-send-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #25d366;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        /* ─── Animations ─── */
+        @keyframes msgIn {
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        @keyframes typingBounce {
+
+            0%,
+            60%,
+            100% {
+                transform: translateY(0);
+            }
+
+            30% {
+                transform: translateY(-5px);
+            }
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .replay-btn {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            background: rgba(99, 102, 241, 0.15);
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            color: #a78bfa;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Inter', sans-serif;
+            z-index: 100;
+        }
+
+        .replay-btn:hover {
+            background: rgba(99, 102, 241, 0.25);
+        }
+    </style>
+</head>
+
+<body>
+    <div class="demo-container">
+        <!-- Left Panel -->
+        <div class="info-panel">
+            <div class="badge">⚡ Inteligencia Artificial</div>
+            <h1>Tu Agente Inmobiliario que Nunca Duerme</h1>
+            <p>Atiende clientes por WhatsApp, Instagram, email y teléfono. Cualifica leads, busca propiedades y agenda
+                visitas — todo en automático, 24/7.</p>
+
+            <div class="stats-bar">
+                <div class="stat">
+                    <span class="stat-value">3s</span>
+                    <span class="stat-label">Tiempo respuesta</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">24/7</span>
+                    <span class="stat-label">Disponibilidad</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">4</span>
+                    <span class="stat-label">Canales</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">∞</span>
+                    <span class="stat-label">Conversaciones</span>
+                </div>
+            </div>
+
+            <div class="score-tracker" id="scoreTracker">
+                <div class="score-header">
+                    <span>📊 Lead Scoring en tiempo real</span>
+                    <span class="score-value" id="scoreValue">0/100</span>
+                </div>
+                <div class="score-bar-bg">
+                    <div class="score-bar-fill" id="scoreBar"></div>
+                </div>
+                <div class="score-items">
+                    <span class="score-item" id="si-nombre">Nombre</span>
+                    <span class="score-item" id="si-operacion">Operación</span>
+                    <span class="score-item" id="si-tipo">Tipo</span>
+                    <span class="score-item" id="si-zona">Zona</span>
+                    <span class="score-item" id="si-presupuesto">Presupuesto</span>
+                    <span class="score-item" id="si-urgencia">Urgencia</span>
+                    <span class="score-item" id="si-visita">Visita</span>
+                </div>
+            </div>
+
+            <button class="cta-btn" onclick="startDemo()">
+                ▶ Iniciar Demo
+            </button>
+        </div>
+
+        <!-- Right Panel: Phone -->
+        <div class="phone-panel">
+            <div class="phone">
+                <div class="phone-notch"></div>
+                <div class="wa-header">
+                    <div class="wa-avatar">🏠</div>
+                    <div class="wa-contact">
+                        <div class="wa-contact-name">Ana — Tu Inmobiliaria</div>
+                        <div class="wa-contact-status" id="contactStatus">en línea</div>
+                    </div>
+                </div>
+                <div class="wa-chat" id="chat">
+                    <div class="typing-indicator" id="typingIndicator">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                </div>
+                <div class="wa-input">
+                    <input class="wa-input-field" placeholder="Escribe un mensaje..." readonly id="inputField">
+                    <button class="wa-send-btn">➤</button>
+                </div>
+            </div>
+
+            <button class="replay-btn" id="replayBtn" onclick="startDemo()" style="display:none">🔄 Repetir
+                demo</button>
+        </div>
+    </div>
+
+    <script>
+        let currentScore = 0;
+        let animationTimeout = [];
+
+        const conversation = [
+            // Sec 0-10: First contact
+            { type: 'user', text: 'Hola! Vi un anuncio vuestro. Estoy buscando piso para comprar 🏠', delay: 1500 },
+            { type: 'typing', delay: 1500 },
+            { type: 'agent', text: '¡Hola! 😊 Soy Ana, tu asesora inmobiliaria virtual. Encantada de ayudarte.\n\n¿Tienes alguna zona en mente? Y para ir buscando, ¿cuál sería tu presupuesto aproximado?', delay: 200 },
+            { type: 'score', items: ['si-operacion', 'si-tipo'], value: 20, delay: 800 },
+
+            // Sec 15-30: Qualification
+            { type: 'user', text: 'Por Nervión o Los Remedios, hasta unos 250.000€', delay: 3500 },
+            { type: 'typing', delay: 1800 },
+            { type: 'score', items: ['si-zona', 'si-presupuesto'], value: 50, delay: 200 },
+            { type: 'agent', text: '¡Perfecto! 📍 Nervión y Los Remedios son zonas geniales. Déjame buscar lo que tenemos...', delay: 200 },
+            { type: 'typing', delay: 2500 },
+
+            // Sec 35-60: Property results — texto completo
+            { type: 'agent', text: 'He encontrado 2 propiedades que te pueden interesar:', delay: 200 },
+            { type: 'agent', text: '🏡 *Piso reformado en Nervión*\n💰 235.000€\n📐 95m² · 🛏 3 hab. · 🚿 2 baños\n📍 Nervión — Calle Luis Montoto\n✨ Parking · Ascensor · A/C\n_Ref: REF-042_', delay: 2500 },
+            { type: 'agent', text: '🌇 *Ático con terraza en Los Remedios*\n💰 249.000€\n📐 85m² · 🛏 2 hab. · 🚿 1 baño\n📍 Los Remedios — C/ Virgen de Luján\n✨ Terraza 20m² · Vistas · Ascensor\n_Ref: REF-078_', delay: 3500 },
+            { type: 'agent', text: '¿Te gustaría más info sobre alguno o agendamos una visita? 😊', delay: 3500 },
+
+            // Sec 60-80: Scheduling
+            { type: 'user', text: 'Me encanta el ático! Podría visitarlo este sábado por la mañana?', delay: 4000 },
+            { type: 'typing', delay: 2000 },
+            { type: 'score', items: ['si-visita', 'si-urgencia'], value: 80, delay: 200 },
+            { type: 'agent', text: '✅ ¡Visita agendada!\n\n📅 Sábado 15 de febrero\n🕐 10:30h\n🏠 Ático en Los Remedios\n📍 C/ Virgen de Luján, 8\n\nTe enviaré un recordatorio el viernes. Por cierto, ¿cómo te llamas? Así te reciben en la visita 😊', delay: 200 },
+
+            // Sec 80-90: Name capture natural
+            { type: 'user', text: 'Carlos, muchas gracias Ana! 🙌', delay: 4000 },
+            { type: 'score', items: ['si-nombre'], value: 90, delay: 500 },
+            { type: 'agent', text: '¡Perfecto Carlos! Queda todo listo. ¡Nos vemos el sábado! 🤝', delay: 1500 },
+
+            // Final
+            { type: 'end', delay: 3000 },
+        ];
+
+        function clearChat() {
+            const chat = document.getElementById('chat');
+            const typing = document.getElementById('typingIndicator');
+            chat.innerHTML = '';
+            chat.appendChild(typing);
+            currentScore = 0;
+            updateScore(0, []);
+            document.getElementById('scoreTracker').classList.remove('visible');
+            document.getElementById('contactStatus').textContent = 'en línea';
+            document.getElementById('contactStatus').classList.remove('typing');
+            document.getElementById('replayBtn').style.display = 'none';
+            document.getElementById('inputField').value = '';
+            animationTimeout.forEach(t => clearTimeout(t));
+            animationTimeout = [];
+        }
+
+        function startDemo() {
+            clearChat();
+            document.getElementById('scoreTracker').classList.add('visible');
+
+            let totalDelay = 500;
+
+            conversation.forEach((msg) => {
+                totalDelay += msg.delay;
+
+                const t = setTimeout(() => {
+                    if (msg.type === 'user') {
+                        addUserMsg(msg.text);
+                    } else if (msg.type === 'agent') {
+                        hideTyping();
+                        addAgentMsg(msg.text);
+                    } else if (msg.type === 'typing') {
+                        showTyping();
+                    } else if (msg.type === 'property') {
+                        hideTyping();
+                        addPropertyCard(msg.data);
+                    } else if (msg.type === 'score') {
+                        updateScore(msg.value, msg.items);
+                    } else if (msg.type === 'end') {
+                        document.getElementById('replayBtn').style.display = 'block';
+                    }
+                }, totalDelay);
+
+                animationTimeout.push(t);
+            });
+        }
+
+        function addUserMsg(text) {
+            const chat = document.getElementById('chat');
+            const typing = document.getElementById('typingIndicator');
+            const div = document.createElement('div');
+            div.className = 'msg user';
+            div.innerHTML = text.replace(/\n/g, '<br>') + '<div class="msg-time">' + getTime() + ' ✓✓</div>';
+            chat.insertBefore(div, typing);
+            scrollChat();
+
+            // Simulate typing in input
+            document.getElementById('inputField').value = text.substring(0, 30) + '...';
+            setTimeout(() => { document.getElementById('inputField').value = ''; }, 500);
+        }
+
+        function addAgentMsg(text) {
+            const chat = document.getElementById('chat');
+            const typing = document.getElementById('typingIndicator');
+            const div = document.createElement('div');
+            div.className = 'msg agent';
+            div.innerHTML = text.replace(/\n/g, '<br>') + '<div class="msg-time">' + getTime() + '</div>';
+            chat.insertBefore(div, typing);
+            scrollChat();
+        }
+
+        function addPropertyCard(data) {
+            const chat = document.getElementById('chat');
+            const typing = document.getElementById('typingIndicator');
+            const div = document.createElement('div');
+            div.className = 'msg agent property-card';
+            div.innerHTML = `
+                <div class="prop-image">
+                    ${data.emoji}
+                    <span class="prop-badge">${data.badge}</span>
+                </div>
+                <div class="prop-info">
+                    <div class="prop-title">${data.title}</div>
+                    <div class="prop-price">${data.price}</div>
+                    <div class="prop-details">${data.details}</div>
+                </div>
+            `;
+            chat.insertBefore(div, typing);
+            scrollChat();
+        }
+
+        function showTyping() {
+            document.getElementById('typingIndicator').classList.add('visible');
+            document.getElementById('contactStatus').textContent = 'escribiendo...';
+            document.getElementById('contactStatus').classList.add('typing');
+            scrollChat();
+        }
+
+        function hideTyping() {
+            document.getElementById('typingIndicator').classList.remove('visible');
+            document.getElementById('contactStatus').textContent = 'en línea';
+            document.getElementById('contactStatus').classList.remove('typing');
+        }
+
+        function updateScore(value, items) {
+            currentScore = value;
+            document.getElementById('scoreValue').textContent = value + '/100';
+            document.getElementById('scoreBar').style.width = value + '%';
+
+            if (value >= 70) {
+                document.getElementById('scoreValue').style.color = '#25d366';
+                document.getElementById('scoreBar').style.background = 'linear-gradient(90deg, #6366f1, #25d366)';
+            }
+
+            items.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.classList.add('active');
+            });
+        }
+
+        function scrollChat() {
+            const chat = document.getElementById('chat');
+            setTimeout(() => { chat.scrollTop = chat.scrollHeight; }, 50);
+        }
+
+        function getTime() {
+            const now = new Date();
+            return now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+        }
+    </script>
+</body>
+
+</html>
